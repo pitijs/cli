@@ -1,23 +1,35 @@
 {
-  "name": "piti-cli",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@pitijs/cli",
+  "version": "0.0.1-beta.4",
+  "description": "Piti JS cli tool.",
+  "main": "dist/index.js",
   "bin": {
     "piti": "./dist/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "echo \"Post Install\"",
     "build": "tsc"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ahmet ATAY",
   "license": "ISC",
   "dependencies": {
-    "piti": "../konsolejs"
+    "@pitijs/core": "^0.0.1-beta.1",
+    "chalk": "^4.1.0",
+    "inquirer": "^7.3.3",
+    "lodash.camelcase": "^4.3.0",
+    "lodash.kebabcase": "^4.1.1",
+    "lodash.startcase": "^4.4.0",
+    "ora": "^5.2.0",
+    "pipeline-js": "^1.0.2",
+    "shelljs": "^0.8.4"
   },
   "devDependencies": {
+    "@types/inquirer": "^7.3.1",
+    "@types/lodash.camelcase": "^4.3.6",
+    "@types/lodash.kebabcase": "^4.1.6",
+    "@types/lodash.startcase": "^4.4.6",
+    "@types/node": "^14.14.20",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
   }

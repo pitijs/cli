@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+import Piti from '@pitijs/core';
+import HelloCommand from './commands/hello';
+
+Piti.run({
+  scriptName: 'piti',
+  commands: [HelloCommand],
+});

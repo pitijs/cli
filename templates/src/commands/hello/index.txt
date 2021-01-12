@@ -1,0 +1,13 @@
+import { Command, Arguments } from '@pitijs/core';
+
+@Command({
+  name: 'hello',
+  description: 'Create a new piti projects',
+})
+class HelloCommand {
+  handler(args: Arguments) {
+    console.log('Hello World!');
+  }
+}
+
+export default HelloCommand;

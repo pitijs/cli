@@ -1,0 +1,11 @@
+import { Command, Arguments } from '@pitijs/core';
+
+@Command({
+  name: '{{commandName}}',
+  description: '{{description}}',
+})
+export default class {{className}} {
+  handler(args: Arguments) {
+    // ...
+  }
+}
