@@ -2,7 +2,7 @@ import { Command, Arguments } from '@pitijs/core';
 
 @Command({
   name: 'hello',
-  description: 'Create a new piti projects',
+  description: 'Hello world command.',
 })
 class HelloCommand {
   handler(args: Arguments) {

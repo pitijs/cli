@@ -40,17 +40,18 @@ class NewCommand {
           `${chalk.italic.yellow(
             name,
           )} directroy name is already exists in the ${chalk.italic.underline.yellow(
-            global.__dirname,
+            './src/commands',
           )}`,
         );
         process.exit(1);
       }
+      this.install(args);
     });
   }
 
   private install(args: Arguments<NewCommandArgs>) {
     Utils.clear();
-    console.log('Piti JS installation');
+    console.log('..:: PitiJS cli project creator ::..');
     this.requestScriptName();
   }
 
@@ -95,7 +96,7 @@ class NewCommand {
     exec(`cp -r ${appRoot}/templates/root/ ${destRoot}/`, (error) => {
       exec(`mv ${destRoot}/scriptname ${destRoot}/${this.answers.scriptName}`, () => {
         exec(`chmod +x ${destRoot}/${this.answers.scriptName}`, () => {
-          exec(`cp -r ${appRoot}/templates/src/ ${destRoot}/src/`, () => {
+          exec(`cp -r ${appRoot}/templates/source/ ${destRoot}/src/`, () => {
             exec(`mv ${destRoot}/src/index.txt ${destRoot}/src/index.ts`);
             exec(
               `mv ${destRoot}/src/commands/hello/index.txt ${destRoot}/src/commands/hello/index.ts`,
@@ -129,7 +130,7 @@ class NewCommand {
         this.spinner.stop().clear();
         console.log(chalk.gray('✨ Run:'));
         console.log(chalk.cyan(`➡️  cd ${this.args.name} && yarn start`));
-        console.log(`${chalk.green('✓')} The project created.`);
+        console.log(`🎉 The project created.`);
       }
     });
   }

@@ -1,6 +1,6 @@
 {
   "name": "@pitijs/cli",
-  "version": "0.0.1-beta.4",
+  "version": "0.0.1-beta.9",
   "description": "Piti JS cli tool.",
   "main": "dist/index.js",
   "bin": {
