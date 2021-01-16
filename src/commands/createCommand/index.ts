@@ -1,6 +1,6 @@
 import { Command, Message } from '@pitijs/core';
 import chalk from 'chalk';
-import { exec, ExecException, execSync } from 'child_process';
+import { test, mkdir, cat, ShellString } from 'shelljs';
 import inquirer, { Answers } from 'inquirer';
 import camelcase from 'lodash.camelcase';
 import kebabcase from 'lodash.kebabcase';
@@ -55,51 +55,46 @@ export default class CreateCommandCommand {
   private create(answers: Answers) {
     const appRoot = `${global.__dirname}/..`;
     const { commandName, dirName, className, description } = answers;
-    exec(`[ -d "./src/commands" ]`, (error: ExecException | null) => {
-      if (error) {
-        execSync(`mkdir ./src/commands`);
-      }
 
-      const newDirName = !dirName ? kebabcase(answers.commandName) : dirName;
-      const newClassName = !className
-        ? startcase(camelcase(answers.commandName)).replace(/ /g, '') + 'Command'
-        : className;
+    if (!test('-d', `./src/commands`)) {
+      mkdir(`./src/commands`);
+    }
 
-      exec(`[ -d "./src/commands/${newDirName}" ]`, (error) => {
-        if (!error) {
-          Message.error(
-            `${chalk.italic.yellow(
-              newDirName,
-            )} directroy name is already exists in the ${chalk.italic.underline.yellow(
-              './src/commands',
-            )}`,
-          );
-          process.exit(1);
-        }
+    const newDirName = !dirName ? kebabcase(answers.commandName) : dirName;
+    const newClassName = !className
+      ? startcase(camelcase(answers.commandName)).replace(/ /g, '') + 'Command'
+      : className;
 
-        execSync(`mkdir "./src/commands/${newDirName}"`);
-        exec(`cat "${appRoot}/templates/command/index.txt"`, (error, stdout) => {
-          if (error) {
-            console.log(Message.error(error.message));
-            process.exit(1);
-          }
+    if (test('-d', `./src/commands/${newDirName}`)) {
+      Message.error(
+        `${chalk.italic.yellow(
+          newDirName,
+        )} directroy name is already exists in the ${chalk.italic.underline.yellow(
+          './src/commands',
+        )}`,
+      );
+      process.exit(1);
+    }
 
-          const placeholders = [
-            ['className', newClassName],
-            ['commandName', commandName],
-            ['dirName', newDirName],
-            ['description', description],
-          ];
+    mkdir(`./src/commands/${newDirName}`);
 
-          let fileContent = stdout;
-          for (const [placeholder, value] of placeholders) {
-            fileContent = fileContent.replace(`{{${placeholder}}}`, value);
-          }
-          execSync(`echo "${fileContent}" > "./src/commands/${newDirName}/index.ts"`);
-          Message.success('Command created.');
-          process.exit(0);
-        });
-      });
-    });
+    let fileContent = cat(`${appRoot}/templates/command/index.txt`).toString();
+
+    const placeholders = [
+      ['className', newClassName],
+      ['commandName', commandName],
+      ['dirName', newDirName],
+      ['description', description],
+    ];
+
+    for (const [placeholder, value] of placeholders) {
+      fileContent = fileContent.replace(`{{${placeholder}}}`, value);
+    }
+
+    const shellString = new ShellString(fileContent);
+    shellString.to(`./src/commands/${newDirName}/index.ts`);
+
+    Message.success('Command created.');
+    process.exit(0);
   }
 }

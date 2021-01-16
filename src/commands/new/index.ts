@@ -1,5 +1,5 @@
-import { Command, Message, Arguments, Utils } from '@pitijs/core';
-import { exec, ExecException } from 'child_process';
+import { Command, Message, Arguments } from '@pitijs/core';
+import { test, mkdir, cp, mv, cat, cd, ShellString, chmod } from 'shelljs';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import ora, { Ora } from 'ora';
@@ -26,31 +26,24 @@ class NewCommand {
     const { name, $0 } = args;
 
     if (!name) {
-      console.log(
-        Message.error(
-          `Please enter directory name. For example: ${chalk.italic.yellow(`${$0} new newApp`)}`,
-        ),
+      Message.error(
+        `Please enter directory name. For example: ${chalk.italic.yellow(`${$0} new newApp`)}`,
       );
       process.exit(1);
     }
 
-    exec(`[ ! -d "./${name}" ]`, (error: ExecException | null) => {
-      if (error) {
-        Message.error(
-          `${chalk.italic.yellow(
-            name,
-          )} directroy name is already exists in the ${chalk.italic.underline.yellow(
-            './src/commands',
-          )}`,
-        );
-        process.exit(1);
-      }
-      this.install(args);
-    });
+    if (test('-d', `./${name}`)) {
+      Message.error(
+        `${chalk.italic.yellow(
+          name,
+        )} directroy is already exists in the ${chalk.italic.underline.yellow('./src/commands')}`,
+      );
+      process.exit(1);
+    }
+    this.install(args);
   }
 
   private install(args: Arguments<NewCommandArgs>) {
-    Utils.clear();
     console.log('..:: PitiJS cli project creator ::..');
     this.requestScriptName();
   }
@@ -83,9 +76,9 @@ class NewCommand {
       `${chalk.italic.cyan(this.answers.scriptName)} project is creating...`,
     ).start();
 
-    exec(`mkdir ${this.args.name}`, (error) => {
-      if (!error) this.copyBlueprints();
-    });
+    if (mkdir(this.args.name)) {
+      this.copyBlueprints();
+    }
   }
 
   // 3. copy blueprints into the project
@@ -93,46 +86,57 @@ class NewCommand {
     const destRoot = `${process.cwd()}/${this.args.name}`;
     const appRoot = `${global.__dirname}/..`;
 
-    exec(`cp -r ${appRoot}/templates/root/ ${destRoot}/`, (error) => {
-      exec(`mv ${destRoot}/scriptname ${destRoot}/${this.answers.scriptName}`, () => {
-        exec(`chmod +x ${destRoot}/${this.answers.scriptName}`, () => {
-          exec(`cp -r ${appRoot}/templates/source/ ${destRoot}/src/`, () => {
-            exec(`mv ${destRoot}/src/index.txt ${destRoot}/src/index.ts`);
-            exec(
-              `mv ${destRoot}/src/commands/hello/index.txt ${destRoot}/src/commands/hello/index.ts`,
-            );
-            this.replacePlaceHolders();
-          });
-        });
-      });
-    });
+    // copy root templates
+    cp('-r', `${appRoot}/templates/root/*`, `${destRoot}`);
+    mv(`${destRoot}/_gitignore`, `${destRoot}/.gitignore`);
+
+    // create src destination
+    mkdir(`${destRoot}/src`);
+
+    // move src files
+    cp('-rf', `${appRoot}/templates/source/*`, `${destRoot}/src/`);
+
+    // rename all template files
+    mv(`${destRoot}/src/index.txt`, `${destRoot}/src/index.ts`);
+    mv(`${destRoot}/src/commands/hello/index.txt`, `${destRoot}/src/commands/hello/index.ts`);
+
+    if (process.platform !== 'win32') {
+      cp(`${appRoot}/templates/os/scriptname.cmd`, `${destRoot}/${this.answers.scriptName}.cmd`);
+    } else {
+      cp(`${appRoot}/templates/os/scriptname`, `${destRoot}/${this.answers.scriptName}`);
+      chmod('+x', `${destRoot}/${this.answers.scriptName}`);
+    }
+
+    this.replacePlaceHolders();
   }
 
   // 4. Replace placeholders to variables
   private replacePlaceHolders() {
     ['package.json', 'README.md'].forEach((file: string) => {
-      exec(`cat ${this.args.name}/${file}`, (error, stdout) => {
-        if (error) {
-          console.log(Message.error(error.message));
-          process.exit(1);
-        }
-        const fileContent = stdout.replace(/\{\{scriptName\}\}/g, this.answers.scriptName);
-        exec(`echo '${fileContent}' > ${this.args.name}/${file}`);
-      });
+      const fileContent = cat(`${this.args.name}/${file}`).replace(
+        /\{\{scriptName\}\}/g,
+        this.answers.scriptName,
+      );
+      const shellString = new ShellString(fileContent);
+      shellString.to(`${this.args.name}/${file}`);
     });
     this.installCore();
   }
 
   // 6. install piti
   private installCore() {
-    exec(`cd ${this.args.name} && yarn add @pitijs/core`, (error) => {
-      if (!error) {
-        this.spinner.stop().clear();
-        console.log(chalk.gray('✨ Run:'));
-        console.log(chalk.cyan(`➡️  cd ${this.args.name} && yarn start`));
-        console.log(`🎉 The project created.`);
-      }
-    });
+    cd(this.args.name).exec(
+      `npm i @pitijs/core --save && npm i ts-node --save-dev`,
+      { silent: true },
+      (code, stdout, stderr) => {
+        if (!code) {
+          this.spinner.stop().clear();
+          console.log(`🎉 The project created.`);
+          console.log(chalk.gray('run:'));
+          console.log(chalk.cyan(`➡️  cd ${this.args.name} && npm run start`));
+        }
+      },
+    );
   }
 }
 

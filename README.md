@@ -40,8 +40,16 @@ Piti.run({
 
 And test your commands:
 
+MacOS / Linux
+
 ```bash
 $ ./myCliApp add-user
+```
+
+Windows
+
+```bash
+myCliApp>.\myCliApp.cmd hello
 ```
 
 Go to framework documentation: https://github.com/pitijs/piti
